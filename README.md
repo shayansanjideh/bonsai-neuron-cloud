@@ -11,6 +11,8 @@ The page loads Ternary-Bonsai-2-2B with PrismML's WebGPU engine and runs it on y
 - **Next token.** The top 5 candidates and their probabilities at every word.
 - **Surgery.** Switch off the token mixer or the MLP of any layer by zeroing the f16 scale shared by each group of 128 ternary weights. Edits are made in GPU memory and restored bit-exactly. A reference loss (nats per token on a fixed paragraph of easy facts) tracks the damage, and the text is rewritten so the cloud shows it.
 
+New to language models? Press **Take the tour** on the page (or open it with `?tour`). Nine short steps explain tokens, odds, layers, neurons and surgery in plain language, with something to try at each one.
+
 ## Run it
 
 Serve this folder from any static host, or locally:
@@ -25,9 +27,10 @@ Then open `http://localhost:8000/`. You need a browser with WebGPU. Add `?stub=1
 
 ```bash
 node tests/ui-test.cjs
+node tests/tour-test.cjs
 ```
 
-This drives the page with the stub model in headless Chromium (needs Playwright): load, generate, click a word, switch a block off, restore.
+These drive the page with the stub model in headless Chromium (needs Playwright): load, generate, click a word, switch a block off, restore, and every step of the tour.
 
 `lab/` holds two pages that check the real model on your GPU: `lab/surgery-check.html` and `lab/lesion-scan.html`.
 

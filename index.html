@@ -14,6 +14,7 @@
   <header class="top">
     <div class="nm"><i class="sq"></i>Bonsai / Neuron Cloud</div>
     <div class="model">Ternary-Bonsai-2-2B · 1.58 bit · WebGPU</div>
+    <div class="tourbtn"><button id="btnTour">Take the tour</button></div>
     <div class="st"><small>Neurons</small><b id="kN">–</b></div>
     <div class="st"><small>Token</small><b id="kTok">–</b></div>
     <div class="st"><small>Speed</small><b id="kSpeed">–</b></div>
@@ -23,7 +24,7 @@
   <div class="progress" id="prog" hidden><i></i></div>
 
   <div class="grid2">
-    <section class="fig panel stage">
+    <section class="fig panel stage" id="figCloud">
       <div class="hd"><b>Fig. 01</b> Neuron cloud · 24 layers<span class="r">drag to orbit · pinch to zoom · click a dot</span></div>
       <div class="view" id="cloud"><div class="fallback" id="cloudMsg">Wake Bonsai to map its neurons.</div></div>
       <div class="ov"><h1 class="h1">Watch a <em>1.58-bit</em> brain think.</h1></div>
@@ -33,7 +34,7 @@
       <div class="stubnote" id="stubNote" hidden>Test model · fake activations</div>
     </section>
     <div class="col">
-      <section class="fig">
+      <section class="fig" id="figMap">
         <div class="hd"><b>Fig. 02</b> Word map · PCA<span class="r">Layer <b id="wmLayerV">16</b> / <span id="wmLayerMax">23</span></span></div>
         <div class="bd">
           <input type="range" id="wmLayer" min="0" max="23" value="16" style="width:100%" aria-label="Layer">
@@ -54,7 +55,7 @@
   </div>
 
   <div class="grid2b">
-    <section class="fig">
+    <section class="fig" id="figWrite">
       <div class="hd"><b>Write</b><span class="r" id="writeHint">click a word to replay its wave</span></div>
       <div class="bd">
         <div class="row">
@@ -68,7 +69,7 @@
         <div class="keys"><button class="blue" id="btnGen" disabled>Generate ↵</button><button id="btnStop" disabled>Stop</button><button id="btnReplay" disabled>Replay</button><span class="kv">Prompt words are grey, the model's own words are ink.</span></div>
       </div>
     </section>
-    <section class="fig">
+    <section class="fig" id="figNext">
       <div class="hd"><b>Next token</b><span class="r" id="ntHint">what it considered at the selected word</span></div>
       <div class="bd"><div class="cands" id="live"></div></div>
     </section>
@@ -88,7 +89,7 @@
     </div>
   </section>
 
-  <section class="fig">
+  <section class="fig" id="notes">
     <div class="hd"><b>Notes</b> What you're looking at</div>
     <div class="bd how">
       <div><h3>The dots</h3><p class="hint" id="howDots">Each layer of Bonsai has an MLP with 6,144 neurons. Showing all 147,456 would be a fog, so each layer shows the 192 that vary most on a short warm-up text. Their activations are copied off the GPU after every layer, for every word, and match PrismML's own llama.cpp to a correlation of 0.9999.</p></div>
@@ -108,8 +109,9 @@ try {
   const now = await fetch(u, { cache: "no-cache" }).then(r => r.ok ? r.text() : old);
   if (now !== old && sessionStorage.getItem("fresh") !== String(now.length)) { sessionStorage.setItem("fresh", String(now.length)); location.reload(); await new Promise(() => {}); }
 } catch {}
-await Promise.all(["neurons-page.mjs", "neurons3d.mjs", "neurons.mjs", "brain-engine.mjs", "instrument.css"].map(f => fetch(f, { cache: "no-cache" }).catch(() => {})));
+await Promise.all(["neurons-page.mjs", "neurons3d.mjs", "neurons.mjs", "brain-engine.mjs", "tour.mjs", "instrument.css"].map(f => fetch(f, { cache: "no-cache" }).catch(() => {})));
 await import("./neurons-page.mjs");
+await import("./tour.mjs");
 </script>
 </body>
 </html>

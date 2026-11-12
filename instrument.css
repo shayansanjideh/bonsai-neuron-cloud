@@ -199,3 +199,29 @@ table.t td.n{white-space:nowrap}
 .page > *:nth-child(2){animation-delay:40ms}.page > *:nth-child(3){animation-delay:80ms}.page > *:nth-child(4){animation-delay:120ms}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .ld[hidden],[hidden]{display:none!important}
+
+/* ---- guided tour (tour.mjs) ---- */
+.top .tourbtn{border-right:0;border-left:1px solid var(--ink)}
+.top .tourbtn button{white-space:nowrap}
+.tour-hl{outline:2px solid var(--or);outline-offset:3px}
+#surgery.tour-hl{scroll-margin-top:230px}
+body.touring .page{padding-bottom:60vh}   /* room to scroll the last panels clear of the card */
+.tour.wide{left:20px;right:20px;width:auto;max-height:min(300px,45vh)}
+.tour.wide .tour-body{columns:2;column-gap:28px}
+.tour.wide .tour-body p{break-inside:avoid}
+.tour{position:fixed;right:20px;bottom:20px;z-index:40;width:380px;max-width:calc(100vw - 32px);max-height:min(560px,calc(100vh - 40px));overflow:auto;
+  background:var(--bg);border:1px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:14px 18px 16px;font-size:14.5px;line-height:1.5}
+.tour.left{right:auto;left:20px}
+.tour-hd{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:12.5px;font-variant-numeric:tabular-nums}
+.tour-hd button{padding:5px 10px;font-size:12.5px}
+.tour h2{font-size:21px;font-weight:600;letter-spacing:-.015em;line-height:1.2;margin:8px 0 8px;text-wrap:balance}
+.tour-body p{margin:0 0 9px}
+.tour-body ul{margin:0 0 9px;padding-left:18px}
+.tour-body li{margin-bottom:5px}
+.tour-body .aside{color:var(--mut);font-size:13.5px;border-left:2px solid var(--line);padding-left:10px}
+.tour-task{border:1px solid var(--line);padding:9px 11px;margin:4px 0 12px;font-size:13.5px;display:flex;gap:9px;align-items:baseline}
+.tour-task b{color:var(--or);white-space:nowrap;font-weight:600}
+.tour-task.ok{border-color:var(--teal)}
+.tour-task.ok b{color:var(--teal)}
+.tour-ft{display:flex;justify-content:space-between;gap:10px}
+@media (max-width:760px){.tour.wide .tour-body{columns:1}.tour,.tour.left,.tour.wide{left:8px;right:8px;bottom:8px;width:auto;max-height:46vh}.top .tourbtn{padding:0 10px}}
