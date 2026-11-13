@@ -112,6 +112,7 @@ try {
 await Promise.all(["neurons-page.mjs", "neurons3d.mjs", "neurons.mjs", "brain-engine.mjs", "tour.mjs", "instrument.css"].map(f => fetch(f, { cache: "no-cache" }).catch(() => {})));
 await import("./neurons-page.mjs");
 await import("./tour.mjs");
+if (new URLSearchParams(location.search).has("demo")) await import("./demo.mjs");
 </script>
 </body>
 </html>
