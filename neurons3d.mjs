@@ -121,6 +121,8 @@ export class NeuronCloud {
         this.path.geometry = n > 1 ? new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 6, 0.022, 8, false) : new THREE.BufferGeometry();
         this.head.visible = true; this.head.position.copy(pts[n - 1]);
       }
+    } else if (this.pathSrc) {                        // nothing selected: take the path away
+      this.pathSrc = null; this.pathN = 0; this.path.geometry.dispose(); this.path.geometry = new THREE.BufferGeometry(); this.head.visible = false;
     }
     this.controls.update(); this.renderer.render(this.scene, this.camera);
     if (this.onView && this.n % 10 === 0) { const sp = new THREE.Spherical().setFromVector3(this.camera.position.clone().sub(this.controls.target)); this.onView({ azimuth: (THREE.MathUtils.radToDeg(sp.theta) + 360) % 360, elevation: 90 - THREE.MathUtils.radToDeg(sp.phi), ruler: this.ruler() }); }

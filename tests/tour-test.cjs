@@ -28,7 +28,7 @@ const { chromium } = require("playwright"); const { spawn } = require("child_pro
     for (let y = 0.25; y < 0.8 && !picked; y += 0.03) for (let x = 0.35; x < 0.65 && !picked; x += 0.02) { await p.mouse.click(box.x + box.width * x, box.y + box.height * y); picked = await p.evaluate(() => !document.getElementById("nTitle").hidden); }
     await done(); log.push(await state()); await shot(6); await next();                       // 7 word map
     await p.fill("#wmLayer", "3"); await p.dispatchEvent("#wmLayer", "input"); await done(); log.push(await state()); await shot(7); await next(); // 8 surgery
-    await p.click('#brain .cell[data-k="L5.mlp"]'); await done(); log.push(await state()); await shot(8); await next();  // 9 limits
+    await p.click('#brain .cell[data-k="L5.mlp"]'); await p.click("#btnApply"); await done(); log.push(await state()); await shot(8); await next();  // 9 limits
     log.push(await state()); await shot(9);
     await p.click(".tour-next"); const closed = await p.evaluate(() => document.querySelector(".tour").hidden && !document.querySelector(".tour-hl"));
     for (const l of log) console.log(JSON.stringify(l));

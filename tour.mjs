@@ -39,10 +39,10 @@ const STEPS = [
     task: "Drag the slider from layer 0 up to 23 and watch the groups move.", done: s => s.slid },
   { at: "#surgery", align: "start", wide: true, title: "Surgery: break it on purpose",
     body: `<p>Because the model sits in your own graphics memory, we can damage it and see what happens. Each cell is one block: 24 mixers on the top row, 24 MLPs below.</p>
-<p>Click a cell to switch that block off. The page then rewrites the text with the block silent.</p>
+<p>Click one or more cells to mark blocks to switch off, then press <b>Apply and rewrite</b>. The page edits the weights and writes the text again with those blocks silent.</p>
 <p><b>Loss</b> measures the damage. It is how surprised the model is, on average, by a paragraph of easy facts. Higher means it got dumber.</p>
 <p class="aside">Try the mixer of layer 0, which hurts a lot. Then restore and try a block in the middle, which often barely matters. Models are oddly robust in places.</p>`,
-    task: "Switch one block off and read the rewritten text above. Press “Restore all” when you're done.", done: s => s.cut },
+    task: "Mark a block, press “Apply and rewrite”, and read the new text above. Press “Restore all” when you're done.", done: s => s.cut },
   { at: "#notes", title: "What this does and doesn't show",
     body: `<p>You have now seen the whole loop: tokens in, 24 layers of mixing and processing, odds out, pick one, repeat.</p>
 <p>Three honest limits:</p>
@@ -54,7 +54,7 @@ const STEPS = [
 
 let i = 0, card, timer;
 const seen = { clicked: false, slid: false, cut: false };
-document.addEventListener("click", e => { if (e.target.closest?.("#out .tok")) seen.clicked = true; if (e.target.closest?.("#brain .cell")) seen.cut = true; }, true);
+document.addEventListener("click", e => { if (e.target.closest?.("#out .tok")) seen.clicked = true; if (e.target.closest?.("#btnApply")) seen.cut = true; }, true);
 document.addEventListener("input", e => { if (e.target.id === "wmLayer") seen.slid = true; }, true);
 
 function clear() { document.querySelectorAll(".tour-hl").forEach(e => e.classList.remove("tour-hl")); }

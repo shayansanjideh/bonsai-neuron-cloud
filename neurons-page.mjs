@@ -183,10 +183,11 @@ function renderText() {
   let lastPrompt = false;
   $("out").innerHTML = toks.map((t, i) => { if (h.has(i)) return ""; const br = lastPrompt && !t.prompt ? "<br>" : ""; lastPrompt = t.prompt; return br + `<span class="tok${t.prompt ? " pr" : ""}${i === cur ? " cur" : ""}" data-i="${i}">${esc(t.piece)}</span>`; }).join("") + (busy ? '<span class="caret"></span>' : blankNote());
 }
-$("out").onclick = e => { const el = e.target.closest(".tok"); if (!el || busy) return; focusTok(+el.dataset.i); };
+$("out").onclick = e => { if (busy) return; const el = e.target.closest(".tok"); if (!el || +el.dataset.i === cur) unfocus(); else focusTok(+el.dataset.i); };
+addEventListener("keydown", e => { if (e.key === "Escape" && !busy && cur >= 0 && !document.querySelector(".tour:not([hidden])")) unfocus(); });
 function renderNext() {
   const t = toks[cur], el = $("live");
-  if (!t || !t.cands) { el.innerHTML = `<p class="hint">${t ? "This is a prompt word, so the model didn't choose it." : "Generate to see the top 5 choices at each word."}</p>`; return; }
+  if (!t || !t.cands) { el.innerHTML = `<p class="hint">${t ? "This is a prompt word, so the model didn't choose it." : toks.length ? "No word selected. Click a word in the text to see what the model considered there." : "Generate to see the top 5 choices at each word."}</p>`; return; }
   el.innerHTML = t.cands.map((c, k) => `<div class="cand static${c.id === t.id ? " chosen" : ""}"><span class="n">${String(k + 1).padStart(2, "0")}</span><span class="t">${esc(label(eng.piece(c.id)))}</span><span class="track"><span class="bar" style="transform:scaleX(${c.p.toFixed(4)})"></span></span><span class="p">${(c.p * 100).toFixed(1)}%</span></div>`).join("");
 }
 function focusTok(i, ms) {
@@ -194,6 +195,14 @@ function focusTok(i, ms) {
   cloud?.show(t.z, t.path, { ms: ms ?? ($("slow").checked ? 2400 : 650) });
   $("kTok").textContent = label(t.piece).slice(0, 14);
   for (const el of $("out").querySelectorAll(".tok")) el.classList.toggle("cur", +el.dataset.i === i);
+  drawWordMap(); renderNeuron();
+}
+// Nothing selected: the cloud goes back to rest and the panels stop pointing at a word.
+function unfocus() {
+  if (cur < 0) return; cur = -1; renderNext();
+  if (cloud && map) cloud.show(new Float32Array(map.S), null, { ms: 400 });
+  $("kTok").textContent = "–";
+  for (const el of $("out").querySelectorAll(".tok.cur")) el.classList.remove("cur");
   drawWordMap(); renderNeuron();
 }
 const special = p => /^<\|.*\|>$/.test(p.trim()) || !p.trim();
@@ -226,7 +235,7 @@ $("btnGen").onclick = async () => {
       $("kSpeed").textContent = ((n + 1) / ((performance.now() - t0) / 1000)).toFixed(1) + " tok/s";
       await wait(slow() ? 2600 : 120);
     }
-    setStatus(knock.size ? `${pct(eng.surgeon.damagedFraction({ knock }))} off` : "Ready", knock.size ? "busy" : "on");
+    setStatus(applied.size ? `${pct(eng.surgeon.damagedFraction({ knock: applied }))} off` : "Ready", applied.size ? "busy" : "on");
   } catch (e) { console.error(e); setStatus("error: " + (e.message || e).slice(0, 60), "err"); }
   busy = false; if (cloud) cloud.busy = false; renderText(); wmSoon(); renderNeuron();
   for (const b of ["btnGen", "btnReplay"]) $(b).disabled = false; $("btnStop").disabled = true;
@@ -242,7 +251,9 @@ $("temp").oninput = () => $("tempV").textContent = $("temp").value;
 
 // ---------- surgery: switch blocks off in GPU memory, then rewrite so the cloud shows the damage ----------
 const REF_TEXT = "The cat sat on the mat. Water boils at 100 degrees Celsius. The capital of France is Paris, and the capital of Japan is Tokyo. One, two, three, four, five, six, seven, eight.";
-const knock = new Set(); let intactLoss = null, surgQ = Promise.resolve();
+// knock is what the cells show (the plan); applied is what the weights in GPU memory currently have switched off.
+const knock = new Set(); let applied = new Set(), intactLoss = null, surgQ = Promise.resolve();
+const SURG_MSG = "Mixer blocks mix words together (A = full attention); MLP blocks hold the neurons above.";
 const pct = f => (f * 100 < 10 ? (f * 100).toFixed(1) : Math.round(f * 100)) + "%";
 async function refLoss() {
   const ids = eng.encodePrompt(REF_TEXT, false);
@@ -259,25 +270,29 @@ function buildBrain() {
 }
 function paintBrain() {
   for (const c of $("brain").querySelectorAll(".cell")) c.classList.toggle("off", knock.has(c.dataset.k));
-  $("mOff").textContent = pct(eng.surgeon.damagedFraction({ knock })); $("btnRestore").disabled = !knock.size;
-  cloud?.setKnocked(new Set([...knock].map(k => +k.slice(1, k.indexOf(".")))));
+  const n = [...knock].filter(k => !applied.has(k)).length + [...applied].filter(k => !knock.has(k)).length;   // cells that differ from the weights
+  $("mOff").textContent = pct(eng.surgeon.damagedFraction({ knock })); $("btnRestore").disabled = !knock.size && !applied.size;
+  $("btnApply").disabled = !n; $("btnApply").classList.toggle("primary", n > 0);
+  $("surgMsg").textContent = n ? `${n} change${n > 1 ? "s" : ""} not applied yet. Press Apply to edit the weights and rewrite the text.` : SURG_MSG;
+  cloud?.setKnocked(new Set([...applied].map(k => +k.slice(1, k.indexOf(".")))));
 }
-function surgery() {                              // queue edits so rapid clicks apply in order
-  paintBrain(); stopFlag = true;
+function surgery() {                              // apply the plan; queued so two presses run in order
+  const want = new Set(knock); stopFlag = true; $("btnApply").disabled = true;
   surgQ = surgQ.then(async () => {
     while (busy) await wait(50);
     busy = true; for (const b of ["btnGen", "btnReplay"]) $(b).disabled = true;
     try {
       if (intactLoss === null) { setStatus("measuring the intact model", "busy"); intactLoss = await refLoss(); $("mLoss0").textContent = intactLoss.toFixed(3); }
-      setStatus("editing weights", "busy"); await eng.surgeon.apply({ knock });
+      setStatus("editing weights", "busy"); await eng.surgeon.apply({ knock: want }); applied = want; paintBrain();
       setStatus("measuring loss", "busy"); const L = await refLoss();
-      $("mLoss").textContent = L.toFixed(3) + (knock.size ? ` (${L >= intactLoss ? "+" : ""}${(L - intactLoss).toFixed(2)})` : "");
+      $("mLoss").textContent = L.toFixed(3) + (want.size ? ` (${L >= intactLoss ? "+" : ""}${(L - intactLoss).toFixed(2)})` : "");
     } catch (e) { console.error(e); setStatus("edit failed: " + (e.message || e).slice(0, 50), "err"); busy = false; return; }
     busy = false; $("btnGen").disabled = false; $("btnGen").click();
   });
 }
-$("brain").onclick = e => { const c = e.target.closest(".cell"); if (!c || !eng) return; knock.has(c.dataset.k) ? knock.delete(c.dataset.k) : knock.add(c.dataset.k); surgery(); };
-$("btnRestore").onclick = () => { knock.clear(); surgery(); };
+$("brain").onclick = e => { const c = e.target.closest(".cell"); if (!c || !eng) return; knock.has(c.dataset.k) ? knock.delete(c.dataset.k) : knock.add(c.dataset.k); paintBrain(); };
+$("btnApply").onclick = () => surgery();
+$("btnRestore").onclick = () => { knock.clear(); paintBrain(); surgery(); };
 if (params.has("stub")) $("btnLoad").textContent = "Load test model";
 drawWordMap();
 if (params.has("autoload")) $("btnLoad").click();

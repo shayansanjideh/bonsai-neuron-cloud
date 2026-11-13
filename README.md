@@ -9,7 +9,7 @@ The page loads Ternary-Bonsai-2-2B with PrismML's WebGPU engine and runs it on y
 - **Neuron cloud.** 192 neurons from each of the 24 MLP layers, copied off the GPU after every layer for every token, drawn as a 3D cloud. Dots light up by how far each neuron is from its usual level, and an orange path follows the strongest firing up the stack. Spot-checked against PrismML's llama.cpp (correlation 0.9999).
 - **Word map.** Each word's internal state at a chosen layer, squashed to 2D.
 - **Next token.** The top 5 candidates and their probabilities at every word.
-- **Surgery.** Switch off the token mixer or the MLP of any layer by zeroing the f16 scale shared by each group of 128 ternary weights. Edits are made in GPU memory and restored bit-exactly. A reference loss (nats per token on a fixed paragraph of easy facts) tracks the damage, and the text is rewritten so the cloud shows it.
+- **Surgery.** Mark the token mixer or the MLP of any layers, press Apply, and they are switched off by zeroing the f16 scale shared by each group of 128 ternary weights. Edits are made in GPU memory and restored bit-exactly. A reference loss (nats per token on a fixed paragraph of easy facts) tracks the damage, and the text is rewritten so the cloud shows it.
 
 New to language models? Press **Take the tour** on the page (or open it with `?tour`). Nine short steps explain tokens, odds, layers, neurons and surgery in plain language, with something to try at each one.
 
